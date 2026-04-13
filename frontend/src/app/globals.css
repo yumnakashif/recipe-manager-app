@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@config "../../tailwind.config.ts";
+
+@layer base {
+  :root {
+    --primary: #333366;
+    --secondary: #097fa5;
+    --background: #ededed;
+    --background-secondary: #c8dde3;
+    --button: #097fa5;
+    --button-text: #fff;
+    --text-main: #1e293b;
+    --text-secondary: #3c3c3c;
+    --dropdown: #e0f4ff;
+    --dropdown-hover: #b3e5ff;
+    --button-secondary: #e7e7e7;
+    --selected: #9ec6ff;
+    --logo-shadow: #053949;
+    --logo-body: #00d8fe;
+    --span-bg: linear-gradient(to right, #4e4e9e, #097fa5, #3e87ed);
+  }
+  .dark {
+    --primary: #a5b4fc;
+    --secondary: #0ba6d1;
+    --background: #121212;
+    --background-secondary: #1a1e24;
+    --button: #097fa5;
+    --button-text: #ffffff;
+    --text-main: #f8fafc;
+    --text-secondary: #a1a1aa;
+    --dropdown: #1a1e24;
+    --dropdown-hover: #242a33;
+    --button-secondary: #242a33;
+    --selected: #1e3a5f;
+    --logo-shadow: #021a24;
+    --logo-body: #00d8fe;
+    --span-bg: linear-gradient(to right, #6363c4, #0ba6d1, #5395f5);
+  }
+  .sunset {
+    --primary: #ff6b6b;
+    --secondary: #ff9966;
+    --background: #1c1514;
+    --background-secondary: #2a1f1d;
+    --button: #ff6b6b;
+    --button-text: #fff;
+    --text-main: #ffffff;
+    --text-secondary: #e6cec9;
+    --dropdown: #2a1f1d;
+    --dropdown-hover: #3d2c29;
+    --button-secondary: #2a1f1d;
+    --selected: #ff9966;
+    --logo-shadow: #333333;
+    --logo-body: #ff6b6b;
+    --span-bg: linear-gradient(to right, #ff6b6b, #ff9966, #ffcc66);
+  }
+  .instagram {
+    --primary: #cc3f7e;
+    --secondary: #fcb045;
+    --background: #ffffff;
+    --background-secondary: #fddaec;
+    --button: #cc3f7e;
+    --button-text: #ffffff;
+    --text-main: #1f2937;
+    --text-secondary: #333333;
+    --dropdown: #ffffff;
+    --dropdown-hover: #f1f1f1;
+    --button-secondary: #ffffff;
+    --selected: #fcb045;
+    --logo-shadow: #000000;
+    --logo-body: #cc3f7e;
+    --span-bg: linear-gradient(to right, #833ab4, #fd1d1d, #fcb045);
+  }
+
+
+  .twilight {
+    --primary: #a296e0;
+    --secondary: #d84c21;
+    --background: #151522;
+    --background-secondary: #242436;
+    --button: #7d9dbf;
+    --button-text: #ffffff;
+    --text-main: #f8fafc;
+    --text-secondary: #c2c8f0;
+    --dropdown: #242436;
+    --dropdown-hover: #363652;
+    --button-secondary: #242436;
+    --selected: #b0394b;
+    --logo-shadow: #6d6875;
+    --logo-body: #8d82c4;
+    --span-bg: linear-gradient(to right, #8d82c4, #f7b7a3, #7d9dbf);
+  }
+}
+
+@layer base {
+  div::selection,
+  h1::selection,
+  button::selection,
+  p::selection,
+  span::selection,
+  a::selection,
+  h2::selection {
+    background-color: rgb(121, 255, 225);
+    text-shadow: rgb(0, 102, 255) 0px 0px 7px;
+    color: rgb(248, 28, 229);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--primary);
+  }
+}
