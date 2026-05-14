@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Plus, Tag } from "lucide-react";
+import { Plus } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8000";
 
@@ -110,27 +110,27 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-12 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-primary">Recipe Library</h1>
-        <div className="flex items-center gap-3">
-          {isLoading && <span className="text-sm font-medium text-slate-500 animate-pulse">Loading...</span>}
+    <div className="max-w-4xl mx-auto pb-12 px-4 max-sm:px-3">
+      <div className="flex justify-between items-center mb-6 max-sm:mb-4 gap-2">
+        <h1 className="text-3xl max-sm:text-2xl font-bold text-primary">Recipe Library</h1>
+        <div className="flex items-center gap-3 max-sm:gap-2 shrink-0">
+          {isLoading && <span className="text-sm max-sm:text-xs font-medium text-slate-500 animate-pulse max-sm:hidden sm:inline">Loading...</span>}
           <button 
             onClick={() => mutate()} 
-            className="px-4 py-2 bg-background-secondary border border-primary/20 text-text-secondary rounded-lg hover:bg-background hover:text-primary transition-colors shadow-sm text-sm font-medium"
+            className="px-4 py-2 max-sm:px-2.5 max-sm:py-1.5 bg-background-secondary border border-primary/20 text-text-secondary rounded-lg hover:bg-background hover:text-primary transition-colors shadow-sm text-sm max-sm:text-xs font-medium"
           >
             Refresh
           </button>
         </div>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-8 max-sm:mb-6">
         <input 
           type="text"
           placeholder="Search recipes or use #tag..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-3 bg-background border border-primary/20 rounded-xl outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm"
+          className="w-full px-4 py-3 max-sm:px-3 max-sm:py-2 bg-background border border-primary/20 rounded-xl outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm max-sm:text-xs"
         />
         <p className="mt-2 text-[10px] text-text-secondary/40 font-medium ml-1">
           Type <span className="text-primary/60 font-bold">#</span> to search by tags (e.g., #Dessert)
@@ -149,36 +149,36 @@ export default function LibraryPage() {
 
       <div className="mt-8">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-sm:gap-3">
             {[1,2,3].map(i => (
-              <div key={i} className="bg-background-secondary/50 rounded-2xl h-64 animate-pulse" />
+              <div key={i} className="bg-background-secondary/50 rounded-2xl max-sm:rounded-xl h-64 max-sm:h-48 animate-pulse" />
             ))}
           </div>
         ) : !filteredRecipes || filteredRecipes.length === 0 ? (
-          <div className="bg-background-secondary border border-primary/20 shadow-sm rounded-xl p-12 text-center text-text-secondary">
-            <p className="text-lg">No recipes found.</p>
+          <div className="bg-background-secondary border border-primary/20 shadow-sm rounded-xl p-12 max-sm:p-6 text-center text-text-secondary">
+            <p className="text-lg max-sm:text-base">No recipes found.</p>
             <p className="mt-2 text-sm italic opacity-60">
               {searchTerm ? "No match for your current search." : "Add your own recipe to get started!"}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-sm:gap-3">
             {filteredRecipes.map((r: any) => (
-              <div key={r.id} className={`bg-background-secondary rounded-2xl shadow-md border border-primary/10 flex flex-col group relative transition-all duration-300 ${addingTagId === r.id ? 'shadow-xl z-[150]' : 'hover:shadow-xl hover:-translate-y-1'}`}>
-                <Link href={`/library/${r.id}`} className="block relative aspect-video overflow-hidden bg-background rounded-t-2xl">
+              <div key={r.id} className={`bg-background-secondary rounded-2xl max-sm:rounded-xl shadow-md border border-primary/10 flex flex-col group relative transition-all duration-300 max-sm:shadow-sm ${addingTagId === r.id ? 'shadow-xl z-[150]' : 'hover:shadow-xl max-sm:hover:shadow-md hover:-translate-y-1 max-sm:hover:translate-y-0'}`}>
+                <Link href={`/library/${r.id}`} className="block relative aspect-video overflow-hidden bg-background rounded-t-2xl max-sm:rounded-t-xl">
                   {r.thumbnail_url ? (
                     <img src={r.thumbnail_url} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-text-main/40 font-medium opacity-20">No Image</div>
                   )}
                 </Link>
-                <div className="p-5 flex flex-col flex-1">
-                  <Link href={`/library/${r.id}`} className="text-lg font-bold text-text-main hover:text-primary transition-colors line-clamp-2 mb-2">
+                <div className="p-5 max-sm:p-3 flex flex-col flex-1">
+                  <Link href={`/library/${r.id}`} className="text-lg max-sm:text-base font-bold text-text-main hover:text-primary transition-colors line-clamp-2 mb-2 max-sm:mb-1">
                     {r.title || "Untitled Recipe"}
                   </Link>
 
                   {/* Tags + inline add */}
-                  <div className="flex flex-wrap gap-1 mt-1 mb-3 relative">
+                  <div className="flex flex-wrap gap-1 max-sm:gap-0.5 mt-1 mb-3 max-sm:mb-2 relative">
                     {r.tags?.map((tag: string) => (
                       <span key={tag} className="text-[10px] font-bold bg-primary/5 text-primary/60 px-2 py-0.5 rounded-md border border-primary/10">
                         {tag}
@@ -231,8 +231,8 @@ export default function LibraryPage() {
                     </button>
                   </div>
 
-                  <div className="mt-auto pt-4 flex items-center justify-between border-t border-primary/5">
-                    <span className="text-xs font-medium text-text-main/30">
+                  <div className="mt-auto pt-4 max-sm:pt-2 flex items-center justify-between border-t border-primary/5">
+                    <span className="text-xs max-sm:text-[10px] font-medium text-text-main/30">
                       {new Date(r.created_at).toLocaleDateString()}
                     </span>
                   </div>
