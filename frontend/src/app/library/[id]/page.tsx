@@ -4,6 +4,7 @@ import { use, useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { DeleteRecipeConfirmDialog } from "@/components/DeleteRecipeConfirmDialog";
 import { useRouter } from "next/navigation";
 import { Copy, Check, ClipboardList, ChefHat } from "lucide-react";
 
@@ -30,6 +31,8 @@ export default function RecipeDetailsPage({ params }: { params: Promise<{ id: st
   const [cookMode, setCookMode] = useState(false);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
 
   const toggleCookMode = async () => {
     if (!cookMode) {
@@ -408,24 +411,8 @@ export default function RecipeDetailsPage({ params }: { params: Promise<{ id: st
         {/* Footer / Actions */}
         <div className="bg-slate-100 p-6 sm:p-8 flex justify-end gap-3">
           <button 
-            onClick={async () => {
-              if (!confirm("Are you sure you want to delete this recipe?")) return;
-              try {
-                const res = await fetch(`${API_BASE}/recipes/${recipe.id}`, { 
-                  method: "DELETE",
-                  headers: { 
-                    ...(sessionToken ? { "Authorization": `Bearer ${sessionToken}` } : {})
-                  }
-                });
-                if (res.ok) {
-                  window.location.href = "/library";
-                } else {
-                  alert("Failed to delete recipe");
-                }
-              } catch (err) {
-                alert("Error deleting recipe");
-              }
-            }} 
+            type="button"
+            onClick={() => setDeleteDialogOpen(true)}
             className="px-6 py-3 bg-white text-red-600 border border-red-200 font-semibold rounded-lg shadow-sm hover:bg-red-50 hover:border-red-300 transition-all flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -447,6 +434,35 @@ export default function RecipeDetailsPage({ params }: { params: Promise<{ id: st
           </button>
         </div>
       </div>
+
+      <DeleteRecipeConfirmDialog
+        open={deleteDialogOpen}
+        recipeTitle={String(recipe.title ?? "")}
+        isDeleting={deleteInProgress}
+        onCancel={() => !deleteInProgress && setDeleteDialogOpen(false)}
+        onConfirm={async () => {
+          if (!recipe || !sessionToken) return;
+          setDeleteInProgress(true);
+          try {
+            const res = await fetch(`${API_BASE}/recipes/${recipe.id}`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${sessionToken}`,
+              },
+            });
+            if (res.ok) {
+              setDeleteDialogOpen(false);
+              router.push("/library");
+            } else {
+              alert("Failed to delete recipe");
+            }
+          } catch {
+            alert("Error deleting recipe");
+          } finally {
+            setDeleteInProgress(false);
+          }
+        }}
+      />
     </div>
   );
 }

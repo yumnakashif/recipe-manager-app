@@ -123,12 +123,52 @@ class PersistenceService:
 
             logger.info("Updated recipe %s", recipe_id)
 
-    def list_recipes(self, limit: int = 50, auth_token: str | None = None) -> list[dict[str, Any]]:
+    def _postgrest_ilike_token(self, raw: str) -> str:
+        t = raw.strip()
+        if t.startswith("#"):
+            t = t[1:].strip()
+        return t.replace("\\", r"\\").replace("*", r"\*").replace(",", r"\,").replace("(", r"\(").replace(")", r"\)")
+
+    def list_recipes(
+        self,
+        *,
+        limit: int,
+        offset: int,
+        search: str | None,
+        auth_token: str | None = None,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """Return (rows, total_count) using PostgREST range + Prefer: count=exact."""
+        terms = [p for p in (search or "").lower().split() if p.strip()]
+        esc_terms: list[str] = []
+        for term in terms:
+            esc = self._postgrest_ilike_token(term)
+            if esc:
+                esc_terms.append(esc)
+        list_headers = {**self._get_headers(auth_token), "Prefer": "return=representation,count=exact"}
+        params: dict[str, str] = {
+            "select": "id,title,description,source_url,thumbnail_url,created_at,author_name,tags",
+            "order": "created_at.desc",
+            "limit": str(limit),
+            "offset": str(offset),
+        }
+        if len(esc_terms) == 1:
+            e = esc_terms[0]
+            params["or"] = f"(title.ilike.*{e}*,tags::text.ilike.*{e}*)"
+        elif len(esc_terms) > 1:
+            parts = ",".join(f"or(title.ilike.*{e}*,tags::text.ilike.*{e}*)" for e in esc_terms)
+            params["and"] = f"({parts})"
         with httpx.Client(timeout=30.0) as client:
-            headers = self._get_headers(auth_token)
-            r = client.get(f"{self.base}/recipes", headers=headers, params={"select": "id,title,description,source_url,thumbnail_url,created_at,author_name,tags", "order": "created_at.desc", "limit": str(limit)})
+            r = client.get(f"{self.base}/recipes", headers=list_headers, params=params)
             r.raise_for_status()
-            return r.json()
+            rows = r.json()
+            cr = r.headers.get("content-range", "")
+            total = len(rows)
+            if "/" in cr:
+                try:
+                    total = int(cr.split("/")[-1])
+                except ValueError:
+                    pass
+            return rows, total
 
     def get_recipe(self, recipe_id: str, auth_token: str | None = None) -> dict[str, Any]:
         with httpx.Client(timeout=30.0) as client:

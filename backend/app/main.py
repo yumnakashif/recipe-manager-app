@@ -2,11 +2,10 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-
 from typing import Annotated
-from fastapi import FastAPI, HTTPException, Header
+
+from fastapi import FastAPI, HTTPException, Header, Query
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.models import ExtractionRequest, ExtractionResponse, RecipeOutput
@@ -95,12 +94,29 @@ async def update(recipe_id: str, recipe: RecipeOutput, authorization: Annotated[
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/recipes")
-async def list_recipes(limit: int = 50, authorization: Annotated[str | None, Header()] = None) -> list[dict[str, object]]:
+async def list_recipes(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(12, ge=1, le=100),
+    search: str | None = Query(None),
+    authorization: Annotated[str | None, Header()] = None,
+) -> dict[str, object]:
     if persistence is None:
         raise HTTPException(status_code=503, detail="Persistence not configured")
     try:
         token = get_token(authorization)
-        return persistence.list_recipes(limit=limit, auth_token=token)
+        offset = (page - 1) * page_size
+        items, total = persistence.list_recipes(
+            limit=page_size,
+            offset=offset,
+            search=search,
+            auth_token=token,
+        )
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
     except Exception as e:
         logger.exception("List recipes failed")
         raise HTTPException(status_code=500, detail=str(e))
