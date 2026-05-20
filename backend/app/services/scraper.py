@@ -7,7 +7,7 @@ from typing import Any
 import httpx
 from bs4 import BeautifulSoup
 
-from app.models import RecipeOutput, Source
+from app.models import RecipeOutput, Source, Ingredient
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +120,7 @@ class ScraperService:
 
         # Pattern 3: Generic — find the "Ingredients" heading then scan siblings
         ingr_heading = None
-        for h in soup.find_all(["h1", "h2", "h3"]):
+        for h in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
             if "ingredient" in text_of(h).lower():
                 ingr_heading = h
                 break
@@ -134,9 +134,9 @@ class ScraperService:
                     continue
                 sib_text_lower = text_of(sib).lower()
                 # Stop when we hit the instructions section
-                if tag in ("h1", "h2", "h3") and any(w in sib_text_lower for w in stop_words):
+                if tag in ("h1", "h2", "h3", "h4", "h5") and any(w in sib_text_lower for w in stop_words):
                     break
-                if tag in ("h3", "h4", "h5") and "ingredient" not in sib_text_lower:
+                if tag in ("h3", "h4", "h5", "h6") and "ingredient" not in sib_text_lower:
                     if current_items:
                         result.append({"section": current_section, "items": current_items})
                         current_items = []
@@ -412,11 +412,45 @@ class ScraperService:
                     logger.info("JSON-LD recipe detected for %s", url)
                     return recipe, None
 
+            # Try to extract from HTML patterns before giving up
+            html_groups = self._find_ingredient_sections_from_html(soup)
+            if html_groups:
+                # Found ingredients in HTML - create a basic recipe from them
+                logger.info("Found ingredients via HTML patterns for %s; creating basic recipe", url)
+                ingredients = []
+                for group in html_groups:
+                    section = group.get("section")
+                    for item_text in group.get("items", []):
+                        qty, unit, name, notes = self._parse_ingredient(item_text)
+                        ingredients.append(Ingredient(
+                            name=name,
+                            quantity=qty,
+                            unit=unit,
+                            section=section,
+                            notes=notes,
+                            source=[Source.WEBSITE_TEXT],
+                        ))
+                
+                if ingredients:
+                    # Extract title if possible
+                    title = None
+                    h1 = soup.find("h1")
+                    if h1:
+                        title = h1.get_text(strip=True)
+                    
+                    recipe = RecipeOutput(
+                        title=title or "Recipe",
+                        ingredients=ingredients,
+                        source_url=url,
+                    )
+                    return recipe, None
+
+            # Fallback: return text for OpenAI extraction
             for tag_name in ["script", "style", "nav", "header", "footer", "noscript"]:
                 for tag in soup.find_all(tag_name):
                     tag.decompose()
             body_text = soup.get_text(" ", strip=True)
-            logger.info("No JSON-LD recipe found for %s; returning text fallback", url)
+            logger.info("No JSON-LD or HTML recipe patterns found for %s; returning text fallback", url)
             return None, body_text
         except Exception:
             logger.exception("Failed scraping website %s", url)
